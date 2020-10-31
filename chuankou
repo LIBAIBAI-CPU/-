@@ -1,0 +1,44 @@
+#include"reg52.h"  //此文件中定义了单片机一些特殊的功能寄存器
+#define LED P2    //声明定义
+typedef unsigned int u16;   //声明定义数据类型
+typedef unsigned char u8;
+u8 receiveData;
+void set_put();
+void UsartInit()  //初始化
+{
+	SCON=0X50;  //设置为工作方式1
+	TMOD=0X20;  //设置计数器工作方式2
+	PCON=0X80;  //波特率加倍
+	TH1=0XFa;
+	TL1=0xFa;
+	ES=1;       //打开接收中断
+	EA=1;       // 打开总中断
+	TR1=1;      //打开计数器
+}
+void main()   // 主函数
+{
+	UsartInit(); //串口初始化
+	while(1);
+}
+
+void Usart()  interrupt 4  //串口中断函数
+{
+	receiveData=SBUF;  //出去接收到的数据
+	RI=0;              //清除接收中断标志位
+	SBUF=receiveData;  //将收到的数据放入到寄存器
+	while(!TI);        //等待发送数据完成
+	TI=0;              //清除发送完成标志位
+	set_put();
+}
+void set_put()  //数据处理
+{
+				switch(receiveData)
+				{
+					case('A'):LED=0xaa;break;  //前进
+					case('B'):LED=0x99;break;  //右转
+					case('C'):LED=0x55;break;  //后退
+					case('D'):LED=0x66;break;  //左转
+					case('E'):LED=0xff;break;  //停止
+					default:break;			
+				}
+}
